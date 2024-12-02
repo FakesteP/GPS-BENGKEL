@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cari Bengkel Terdekat</title>
+    <!-- TomTom Maps -->
+    <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.13.0/maps/maps-web.min.js"></script>
+    <link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.13.0/maps/maps.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        h1 {
+            color: #1e2a3a;
+            font-weight: 700;
+            margin-bottom: 40px;
+            font-size: 36px;
+        }
+        #map {
+            height: 70vh;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+        }
+        .card-body {
+            padding: 30px;
+        }
+        .form-floating input, .form-floating select {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .btn-primary, .btn-success, .btn-danger {
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            border-color: #2ecc71;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .popup-info h3 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        .popup-info p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .popup-info {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .popup-info button {
+            background-color: #3498db;
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            border-radius: 5px;
+        }
+        .form-floating label {
+            font-weight: 600;
+            color: #555;
+        }
+        .btn-primary:active, .btn-success:active, .btn-danger:active {
+            transform: scale(0.98);
+        }
+        .card-body .row .col-md-4 {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <h1 class="text-center">
+            <i class="bi bi-geo-alt-fill text-primary"></i> Cari Bengkel Terdekat
+        </h1>
+
+        <div class="card shadow-lg mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select id="workshopType" class="form-control">
+                                <option value="motor">Bengkel Motor</option>
+                                <option value="mobil">Bengkel Mobil</option>
+                                <option value="bengkel">Bengkel</option>
+                            </select>
+                            <label for="workshopType">
+                                <i class="bi bi-search"></i> Pilih Jenis Bengkel
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select id="radius" class="form-control">
+                                <option value="5000">5 KM</option>
+                                <option value="10000">10 KM</option>
+                            </select>
+                            <label for="radius">
+                                <i class="bi bi-cursor"></i> Jarak dari lokasi anda
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="number" id="limit" class="form-control" value="5" placeholder="5">
+                            <label for="limit">
+                                <i class="bi bi-list-ol"></i> Total bengkel yang ingin ditemukan
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <button class="btn btn-primary btn-lg px-5" onclick="findNearbyPlaces()">
+                        <i class="bi bi-search"></i> Cari
+                    </button>
+                    <button class="btn btn-success btn-lg px-5" onclick="calculateRoute()">
+                        <i class="bi bi-map"></i> Rute
+                    </button>
+                    <button class="btn btn-danger btn-lg px-5" onclick="resetMap()">
+                        <i class="bi bi-x-circle"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-lg">
+            <div class="card-body p-2">
+                <div id="map" class="shadow-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let map = tt.map({
+            key: 'gDg6vaHA8AWLG7YL3gdS3e3nkPZpLGQt',
+            container: 'map',
+            center: [110.3644, -7.7958],
+            zoom: 14
+        });
+
+        let markers = [];
+        let lng, lat;
+
+        function findNearbyPlaces() {
+            markers.forEach(marker => marker.remove());
+            markers = [];
+
+            const workshopType = document.getElementById('workshopType').value;
+            const radius = document.getElementById('radius').value || 5000;
+            const limit = document.getElementById('limit').value || 5;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const userLatitude = position.coords.latitude;
+                    const userLongitude = position.coords.longitude;
+
+                    new tt.Marker({ color: 'blue' })
+                        .setLngLat([userLongitude, userLatitude])
+                        .addTo(map);
+
+                    let keyword = "";
+                    if (workshopType === "motor") {
+                        keyword = "bengkel motor";
+                    } else if (workshopType === "mobil") {
+                        keyword = "bengkel mobil";
+                    } else {
+                        keyword = "bengkel";
+                    }
+
+                    fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(keyword)}.json?lat=${userLatitude}&lon=${userLongitude}&radius=${radius}&key=gDg6vaHA8AWLG7YL3gdS3e3nkPZpLGQt`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const places = data.results;
+
+                            // Urutkan berdasarkan jarak terdekat
+                            places.sort((a, b) => a.dist - b.dist);
+
+                            // Ambil 5 terdekat
+                            const filteredPlaces = places.slice(0, limit);
+
+                            filteredPlaces.forEach(place => {
+                                const placePosition = [place.position.lon, place.position.lat];
+                                const marker = new tt.Marker().setLngLat(placePosition).addTo(map);
+                                markers.push(marker);
+
+                                marker.getElement().onclick = function() {
+                                    markers.forEach(marker => marker.getElement().style.backgroundColor = 'transparent');
+                                    marker.getElement().style.backgroundColor = 'red';
+                                    lng = placePosition[0];
+                                    lat = placePosition[1];
+
+                                    Swal.fire({
+                                        title: 'Informasi Bengkel',
+                                        html: 
+                                            `<div class="popup-info">
+                                                <h3>${place.poi.name}</h3>
+                                                <p>${place.address.freeformAddress}</p>
+                                                <p>Jarak dari lokasi: ${place.dist} m</p>
+                                                <button class="btn btn-primary" onclick="Swal.close()">Tutup</button>
+                                            </div>`,
+                                        showConfirmButton: false
+                                    });
+                                };
+
+                                new tt.Popup({ offset: 30 })
+                                    .setLngLat(placePosition)
+                                    .setHTML(`<h3>${place.poi.name}</h3>`)
+                                    .addTo(map);
+                            });
+
+                            map.flyTo({ center: [userLongitude, userLatitude], zoom: 14 });
+                        });
+                });
+            } else {
+                alert("Geolocation tidak didukung oleh browser ini.");
+            }
+        }
+
+        function calculateRoute() {
+            if (!lng || !lat) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Pilih bengkel terlebih dahulu',
+                    icon: 'error',
+                    confirmButtonText: 'Tutup'
+                });
+                return;
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const userLatitude = position.coords.latitude;
+                    const userLongitude = position.coords.longitude;
+
+                    fetch(`https://api.tomtom.com/routing/1/calculateRoute/${userLatitude},${userLongitude}:${lat},${lng}/json?key=gDg6vaHA8AWLG7YL3gdS3e3nkPZpLGQt&traffic=true`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const route = data.routes[0].legs[0].points;
+                            const routeCoordinates = route.map(point => [point.longitude, point.latitude]);
+
+                            if (map.getLayer('route')) {
+                                map.removeLayer('route');
+                            }
+                            if (map.getSource('route')) {
+                                map.removeSource('route');
+                            }
+
+                            map.addSource('route', {
+                                'type': 'geojson',
+                                'data': {
+                                    'type': 'Feature',
+                                    'properties': {},
+                                    'geometry': {
+                                        'type': 'LineString',
+                                        'coordinates': routeCoordinates
+                                    }
+                                }
+                            });
+
+                            map.addLayer({
+                                'id': 'route',
+                                'type': 'line',
+                                'source': 'route',
+                                'layout': {
+                                    'line-join': 'round',
+                                    'line-cap': 'round'
+                                },
+                                'paint': {
+                                    'line-color': '#888',
+                                    'line-width': 8
+                                }
+                            });
+
+                            map.flyTo({ center: [userLongitude, userLatitude], zoom: 14 });
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+            } else {
+                alert("Geolocation tidak didukung oleh browser ini.");
+            }
+        }
+
+        function resetMap() {
+            markers.forEach(marker => marker.remove());
+            markers = [];
+            map.flyTo({ center: [110.3644, -7.7958], zoom: 14 });
+        }
+
+        map.addControl(new tt.NavigationControl());
+    </script>
+
+</body>
+</html>
