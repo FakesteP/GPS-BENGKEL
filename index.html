@@ -328,6 +328,15 @@
         function resetMap() {
             markers.forEach(marker => marker.remove());
             markers = [];
+                
+            if (map.getLayer('route')) {
+                map.removeLayer('route');
+            }
+        
+            if (map.getSource('route')) {
+                map.removeSource('route');
+            }
+        
             map.flyTo({ center: [110.3644, -7.7958], zoom: 14 });
         }
 
