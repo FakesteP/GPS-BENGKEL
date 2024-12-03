@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,73 +18,93 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
         }
+
         .container {
             max-width: 1200px;
         }
+
         h1 {
             color: #1e2a3a;
             font-weight: 700;
             margin-bottom: 40px;
             font-size: 36px;
         }
+
         #map {
             height: 70vh;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
+
         .card {
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             background-color: #ffffff;
         }
+
         .card-body {
             padding: 30px;
         }
-        .form-floating input, .form-floating select {
+
+        .form-floating input,
+        .form-floating select {
             border-radius: 8px;
             border: 1px solid #ddd;
             padding: 10px;
         }
-        .btn-primary, .btn-success, .btn-danger {
+
+        .btn-primary,
+        .btn-success,
+        .btn-danger {
             font-size: 16px;
             padding: 12px 24px;
             border-radius: 8px;
         }
+
         .btn-primary {
             background-color: #3498db;
             border-color: #3498db;
         }
+
         .btn-primary:hover {
             background-color: #2980b9;
         }
+
         .btn-success {
             background-color: #2ecc71;
             border-color: #2ecc71;
         }
+
         .btn-success:hover {
             background-color: #27ae60;
         }
+
         .btn-danger {
             background-color: #e74c3c;
             border-color: #e74c3c;
         }
+
         .btn-danger:hover {
             background-color: #c0392b;
         }
+
         .popup-info h3 {
             font-size: 18px;
             color: #2c3e50;
         }
+
         .popup-info p {
             font-size: 14px;
             color: #7f8c8d;
         }
+
         .popup-info {
             background-color: white;
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .popup-info button {
             background-color: #3498db;
             border: none;
@@ -91,18 +112,24 @@
             color: white;
             border-radius: 5px;
         }
+
         .form-floating label {
             font-weight: 600;
             color: #555;
         }
-        .btn-primary:active, .btn-success:active, .btn-danger:active {
+
+        .btn-primary:active,
+        .btn-success:active,
+        .btn-danger:active {
             transform: scale(0.98);
         }
+
         .card-body .row .col-md-4 {
             margin-bottom: 15px;
         }
     </style>
 </head>
+
 <body>
 
     <div class="container py-5">
@@ -149,14 +176,14 @@
                 </div>
 
                 <div class="d-flex justify-content-center gap-3 mt-4">
-                    <button class="btn btn-primary btn-lg px-4" onclick="findNearbyPlaces()">
-                        <i class="bi bi-search"></i> Cari
-                    </button>
                     <button class="btn btn-success btn-lg px-4" onclick="calculateRoute()">
                         <i class="bi bi-map"></i> Rute
                     </button>
                     <button class="btn btn-danger btn-lg px-4" onclick="resetMap()">
                         <i class="bi bi-x-circle"></i> Reset
+                    </button>
+                    <button class="btn btn-primary btn-lg px-4" onclick="findNearbyPlaces()">
+                        <i class="bi bi-search"></i> Cari
                     </button>
                 </div>
             </div>
@@ -225,10 +252,17 @@
 
                             filteredPlaces.forEach(place => {
                                 const placePosition = [place.position.lon, place.position.lat];
-                                const marker = new tt.Marker().setLngLat(placePosition).addTo(map);
+
+                                // Buat marker dengan ikon wrench dari Bootstrap
+                                const markerElement = document.createElement('div');
+                                markerElement.innerHTML = `<i class="bi bi-wrench" style="font-size: 24px; color: #e74c3c;"></i>`;
+
+                                const marker = new tt.Marker({ element: markerElement })
+                                    .setLngLat(placePosition)
+                                    .addTo(map);
                                 markers.push(marker);
 
-                                marker.getElement().onclick = function() {
+                                marker.getElement().onclick = function () {
                                     markers.forEach(marker => marker.getElement().style.backgroundColor = 'transparent');
                                     marker.getElement().style.backgroundColor = 'red';
                                     lng = placePosition[0];
@@ -236,13 +270,13 @@
 
                                     Swal.fire({
                                         title: 'Informasi Bengkel',
-                                        html: 
+                                        html:
                                             `<div class="popup-info">
-                                                <h3>${place.poi.name}</h3>
-                                                <p>${place.address.freeformAddress}</p>
-                                                <p>Jarak dari lokasi: ${place.dist} m</p>
-                                                <button class="btn btn-primary" onclick="Swal.close()">Tutup</button>
-                                            </div>`,
+                                        <h3>${place.poi.name}</h3>
+                                        <p>${place.address.freeformAddress}</p>
+                                        <p>Jarak dari lokasi: ${place.dist} m</p>
+                                        <button class="btn-danger" onclick="Swal.close()">Tutup</button>
+                                    </div>`,
                                         showConfirmButton: false
                                     });
                                 };
@@ -260,6 +294,7 @@
                 alert("Geolocation tidak didukung oleh browser ini.");
             }
         }
+
 
         function calculateRoute() {
             if (!lng || !lat) {
@@ -326,22 +361,28 @@
         }
 
         function resetMap() {
+            // Menghapus semua marker yang ada
             markers.forEach(marker => marker.remove());
             markers = [];
-                
+
+            // Menghapus layer rute yang ada
             if (map.getLayer('route')) {
                 map.removeLayer('route');
             }
-        
+
+            // Menghapus source rute yang ada
             if (map.getSource('route')) {
                 map.removeSource('route');
             }
-        
+
+            // Mengembalikan tampilan peta ke posisi awal
             map.flyTo({ center: [110.3644, -7.7958], zoom: 14 });
         }
+
 
         map.addControl(new tt.NavigationControl());
     </script>
 
 </body>
+
 </html>
